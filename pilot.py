@@ -18,7 +18,7 @@ class TwitterClient(object):
         config.read('connection.conf')
         # keys and tokens from the Twitter Dev Console
         consumer_key = str(config.get('CONN','consumer_key'))
-        print consumer_key
+        #print consumer_key
         consumer_secret = str(config.get('CONN','consumer_secret'))
         access_token = str(config.get('CONN','access_token'))
         access_token_secret = str(config.get('CONN','access_token_secret'))
@@ -30,7 +30,6 @@ class TwitterClient(object):
             self.auth.set_access_token(access_token, access_token_secret)
             # create tweepy API object to fetch tweets
             self.api = tweepy.API(self.auth)
-            print ("authentication successfull")
         except:
             print("Error: Authentication Failed")
     def getFriends(self,screen_name):
@@ -53,12 +52,27 @@ class TwitterClient(object):
 def main():
     # creating object of TwitterClient Class
     twitterConnect = TwitterClient()
+    count = 1
     #id_and_screen_name = twitterConnect.getFriends(twitterConnect.api.me())
     #searched_tweets = twitterConnect.api.search(q="bitcoin",count=1,)
     #print searched_tweets[0]
-    tweets = twitterConnect.api.user_timeline(screen_name = '7de9pk', count =1000)
-    print len(tweets)
-    print type(tweets)
+    id = '259891851'
+    #tweets = twitterConnect.api.user_timeline(screen_name = '7de9pk', count =1000)
+    #tweepy.Cursor(api.user_timeline, id="twitter")
+    tweets = [json.dumps(tweet._json) for tweet in tweepy.Cursor(twitterConnect.api.user_timeline, id = '259891851').items()]
+    print tweets
+    with open (id,'w') as file:
+        #file.write(json.dumps(tweets))
+        file.write(','.join(tweets))
+    exit()
+    '''#for tweets in tweepy.Cursor(twitterConnect.api.user_timeline, id = '259891851').items():
+    # process status here
+    #process_status(status)
+        print type(status)
+        print json.dumps(status._json)
+        exit()
+        count+=1    
+    print count'''
     exit()
 
 if __name__ == "__main__":
