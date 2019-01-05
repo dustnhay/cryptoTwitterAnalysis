@@ -1,0 +1,10 @@
+def getUserDetails(screen_name):
+    print("name: " + item.name)
+    print("screen_name: " + item.screen_name)
+    print("description: " + item.description)
+    print("statuses_count: " + str(item.statuses_count))
+    print("friends_count: " + str(item.friends_count))
+    print("followers_count: " + str(item.followers_count)
+    created_at
+
+twitter object full contents https://developer.twitter.com/en/docs/tweets/data-dictionary/overview/tweet-object

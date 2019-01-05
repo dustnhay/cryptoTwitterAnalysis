@@ -60,7 +60,7 @@ def main():
     #tweets = twitterConnect.api.user_timeline(screen_name = '7de9pk', count =1000)
     #tweepy.Cursor(api.user_timeline, id="twitter")
     tweets = [json.dumps(tweet._json) for tweet in tweepy.Cursor(twitterConnect.api.user_timeline, id = '259891851').items()]
-    print tweets
+    #print tweets
     with open (id,'w') as file:
         #file.write(json.dumps(tweets))
         file.write(','.join(tweets))
