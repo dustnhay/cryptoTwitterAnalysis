@@ -1,4 +1,6 @@
 connection.conf
 259891851
 demo.py
-demo.py
+.vscode
+all_tweets_dump/*
+all_tweets_withGeoData_dump/*

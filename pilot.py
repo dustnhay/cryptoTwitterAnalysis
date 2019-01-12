@@ -1,5 +1,6 @@
 import re
 import tweepy
+import os
 from tweepy import OAuthHandler
 from textblob import TextBlob
 import numpy as np
@@ -8,7 +9,7 @@ import ConfigParser
  
 class TwitterClient(object):
     '''
-    Generic Twitter Class for sentiment analysis.
+    Generic Twitter Class
     '''
     def __init__(self):
         '''
@@ -18,7 +19,6 @@ class TwitterClient(object):
         config.read('connection.conf')
         # keys and tokens from the Twitter Dev Console
         consumer_key = str(config.get('CONN','consumer_key'))
-        #print consumer_key
         consumer_secret = str(config.get('CONN','consumer_secret'))
         access_token = str(config.get('CONN','access_token'))
         access_token_secret = str(config.get('CONN','access_token_secret'))
@@ -29,53 +29,52 @@ class TwitterClient(object):
             # set access token and secret
             self.auth.set_access_token(access_token, access_token_secret)
             # create tweepy API object to fetch tweets
-            self.api = tweepy.API(self.auth)
+            self.api = tweepy.API(self.auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
         except:
             print("Error: Authentication Failed")
     def getFriends(self,screen_name):
         '''
-        To get the friends list as {user_id:screen_name}
+        To get the all my friend list as {user_id:screen_name}
         '''
+        print ("Collecting all friends...")
         API = self.api
         my_screen_name = API.me().screen_name
         #print my_screen_name
         friends_user_ids = API.friends_ids(my_screen_name)
         #print API.friends_ids('7de9pk')
         friends_screen_name = [API.get_user(id).screen_name.encode('ascii') for id in friends_user_ids]
-        id_and_screen_name = dict(zip(friends_user_ids, friends_screen_name))
-        np.save('my_friends_id_n_screenName',id_and_screen_name)
-        with open('my_friends_id_n_screenName.txt', 'w') as file:
-            file.write(json.dumps(id_and_screen_name))
-        return id_and_screen_name
-#def getTimelineTweets(screen_name):
-
+        all_friends = dict(zip(friends_user_ids, friends_screen_name))
+        #np.save('my_friends_id_n_screenName',id_and_screen_name)
+        with open('my_friends_id_n_screenName.json', 'w') as file:
+            file.write(json.dumps(all_friends))
+        print ("Done collecting friends..")
+        return all_friends
+    def persistTimelineTweets(self, id, screen_name):
+        '''Persists all the tweets of my friends in json files to disk'''
+        print("Persisting "+screen_name+"'s tweets to disk..")
+        if not (os.path.exists("all_tweets_dump/"+ str(screen_name) +"_"+str(id)+".json")):
+            print ("all_tweets_dump/"+ str(screen_name) +"_"+str(id)+".json")
+            #print("Persisting "+screen_name+"'s tweets to disk..")
+            tweets = [json.dumps(tweet._json) for tweet in tweepy.Cursor(self.api.user_timeline, id = id).items()]
+            file_name = 'all_tweets_dump/'+str(screen_name)+"_"+str(id)+".json"
+            with open (file_name,'w') as file:
+                #file.write(json.dumps(tweets))
+                file.write('[')
+                file.write(','.join(tweets))
+                file.write(']')
+            print ("done...")
+        else:   
+            print ("already present..")
 def main():
     # creating object of TwitterClient Class
     twitterConnect = TwitterClient()
-    count = 1
-    #id_and_screen_name = twitterConnect.getFriends(twitterConnect.api.me())
-    #searched_tweets = twitterConnect.api.search(q="bitcoin",count=1,)
-    #print searched_tweets[0]
-    id = '259891851'
-    #tweets = twitterConnect.api.user_timeline(screen_name = '7de9pk', count =1000)
-    #tweepy.Cursor(api.user_timeline, id="twitter")
-    tweets = [json.dumps(tweet._json) for tweet in tweepy.Cursor(twitterConnect.api.user_timeline, id = '259891851').items()]
-    #print tweets
-    with open (id,'w') as file:
-        #file.write(json.dumps(tweets))
-        file.write(','.join(tweets))
-    exit()
-    '''#for tweets in tweepy.Cursor(twitterConnect.api.user_timeline, id = '259891851').items():
-    # process status here
-    #process_status(status)
-        print type(status)
-        print json.dumps(status._json)
-        exit()
-        count+=1    
-    print count'''
-    exit()
+    all_friends = twitterConnect.getFriends(twitterConnect.api.me())
 
+    #all_friends = {"1027086041998450688": "BTC_Macro", "856582889768615936": "fireice_uk", "947262969141977090": "brazukcoin"}
+    for id, screen_name in all_friends.items():
+        #print (str(id)+":"+str(screen_name)+"\n")
+        twitterConnect.persistTimelineTweets(id, screen_name)
+    #tweets = twitterConnect.api.user_timeline(screen_name = '7de9pk', count =1000)
 if __name__ == "__main__":
     # calling main function
-    
     main()
